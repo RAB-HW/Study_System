@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hzb.erp.security.mapper.SecurityUserMapper">
+
+    <select id="loadUserByUsername" resultType="com.hzb.erp.security.Util.JwtUserDetails">
+        select u.id, u.mobile as username, u.password, u.state, u.name, s.school_id as org_id
+        from user u
+        left join
+             (select * from student where user_id = (select id from `user` where mobile = #{username}) and as_default = 1 limit 1) s
+             on u.id = s.user_id
+        where u.mobile = #{username}
+    </select>
+
+    <resultMap id="loadUserByUsernameResultMap" type="com.hzb.erp.security.Util.JwtUserDetails">
+        <result column="id" property="id"/>
+        <collection property="roles" select="com.hzb.erp.common.mapper.rbac.SysRoleMapper.selectRoleByUser" column="id"
+                    ofType="com.hzb.erp.common.entity.rbac.SysRole"/>
+    </resultMap>
+
+    <select id="loadStaffByUsername" resultMap="loadUserByUsernameResultMap">
+        select staff.id, staff.mobile as username, staff.password, staff.state, staff.name, so.org_id
+        from staff
+        left join staff_orginfo so on staff.id = so.staff_id
+        where staff.mobile = #{username}
+    </select>
+
+</mapper>
